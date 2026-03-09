@@ -35,7 +35,11 @@ jobs:
         env:
           FLY_APP_URL: ${{ secrets.FLY_APP_URL }}
         run: |
-          if [[ ! "$FLY_APP_URL" =~ ^https:// ]]; then
+          if [[ -z "$FLY_APP_URL" ]]; then
+            # Default derived from the app name in fly.toml: app = 'streamlit-2-hrnq'
+            FLY_APP_URL="https://streamlit-2-hrnq.fly.dev"
+            echo "Warning: FLY_APP_URL secret is not set; using default: ${FLY_APP_URL}"
+          elif [[ ! "$FLY_APP_URL" =~ ^https:// ]]; then
             echo "Error: FLY_APP_URL must start with https://" >&2
             exit 1
           fi
