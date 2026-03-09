@@ -81,14 +81,21 @@ make scale          Show current VM count and size settings
 
 ```
 streamlit/
-├── app.py                 Main Streamlit application
-├── utils.py               Helper functions (returns, z-scores, rolling avg, …)
-├── requirements.txt       Python dependencies
-├── Dockerfile             Container image definition (used by Fly.io)
-├── fly.toml.example       Reference Fly.io configuration (copy of what make create generates)
-├── Makefile               Management commands
+├── app.py                      Main Streamlit application
+├── utils.py                    Helper functions (returns, z-scores, rolling avg, …)
+├── requirements.txt            Python dependencies
+├── Dockerfile                  Container image definition (used by Fly.io)
+├── fly.toml.example            Reference Fly.io configuration (copy of what make create generates)
+├── Makefile                    Management commands
+├── copilot.md                  GitHub Copilot context, OKRs, and coding conventions
+├── real.md                     Real-world OKRs for the Fly.io create/destroy lifecycle
+├── formula_architecture.md     Architecture diagrams (Mermaid) + file-purpose explanations
 └── scripts/
-    ├── check-prereqs.sh   Prerequisite checker (flyctl, Docker, auth)
-    ├── fly-setup.sh       Interactive creation/deployment wizard
-    └── fly-destroy.sh     Environment teardown with confirmation
+    ├── check-prereqs.sh        Prerequisite checker (flyctl, Docker, auth)
+    ├── fly-setup.sh            Interactive creation/deployment wizard
+    └── fly-destroy.sh          Environment teardown with confirmation
 ```
+
+See [`formula_architecture.md`](formula_architecture.md) for detailed Mermaid
+diagrams of the component relationships, request flow, and infrastructure
+lifecycle.
