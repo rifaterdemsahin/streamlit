@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚀 Streamlit PoC — Creation Flow &amp; Rationale</title>
+  <style>
+    /* ── Reset &amp; base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #4361ee;
+      --indigo:  #6d6acf;
+      --purple:  #9b59b6;
+      --pink:    #e84393;
+      --red:     #e63946;
+      --orange:  #f77f00;
+      --yellow:        #ffd60a;
+      --yellow-dark:   #c9a800;
+      --text-dark:     #222222;
+      --green:   #2dc653;
+      --teal:    #00b4d8;
+      --cyan:    #48cae4;
+      --white:   #ffffff;
+      --dark:    #0d1117;
+      --card-bg: #161b22;
+      --border:  rgba(255,255,255,0.08);
+      --radius:  16px;
+      --shadow:  0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    body {
+      background: var(--dark);
+      color: var(--white);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated gradient header ─────────────────────────────────────── */
+    header {
+      text-align: center;
+      padding: 60px 24px 40px;
+      background: linear-gradient(135deg, #0d1117 0%, #1a1f35 50%, #0d1117 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(67,97,238,0.25) 0%, transparent 70%);
+      animation: pulse-bg 4s ease-in-out infinite alternate;
+    }
+    @keyframes pulse-bg {
+      from { opacity: 0.5; }
+      to   { opacity: 1;   }
+    }
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(90deg, var(--teal), var(--blue), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+      animation: slide-down 0.8s ease both;
+    }
+    header p {
+      margin-top: 12px;
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.6);
+      position: relative;
+      animation: slide-down 0.8s 0.2s ease both;
+    }
+    @keyframes slide-down {
+      from { opacity: 0; transform: translateY(-24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Main layout ──────────────────────────────────────────────────── */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Section headers ──────────────────────────────────────────────── */
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, var(--border), transparent);
+      margin-left: 12px;
+    }
+
+    /* ── Card ─────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+
+    /* ── Pill badge ───────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── ① CREATION ORDER TIMELINE ───────────────────────────────────── */
+    #creation-order { margin-bottom: 80px; }
+
+    .timeline {
+      position: relative;
+      padding-left: 60px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(to bottom,
+        var(--blue), var(--purple), var(--pink),
+        var(--orange), var(--green), var(--teal), var(--cyan));
+      border-radius: 4px;
+    }
+
+    .tl-item {
+      position: relative;
+      margin-bottom: 32px;
+      animation: fade-in-left 0.6s ease both;
+    }
+    .tl-item:nth-child(1)  { animation-delay: 0.05s; }
+    .tl-item:nth-child(2)  { animation-delay: 0.15s; }
+    .tl-item:nth-child(3)  { animation-delay: 0.25s; }
+    .tl-item:nth-child(4)  { animation-delay: 0.35s; }
+    .tl-item:nth-child(5)  { animation-delay: 0.45s; }
+    .tl-item:nth-child(6)  { animation-delay: 0.55s; }
+    .tl-item:nth-child(7)  { animation-delay: 0.65s; }
+    .tl-item:nth-child(8)  { animation-delay: 0.75s; }
+    @keyframes fade-in-left {
+      from { opacity: 0; transform: translateX(-20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .tl-dot {
+      position: absolute;
+      left: -48px;
+      top: 18px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      z-index: 2;
+      box-shadow: 0 0 0 4px var(--dark);
+      animation: pulse-dot 2s ease-in-out infinite alternate;
+    }
+    @keyframes pulse-dot {
+      from { box-shadow: 0 0 0 4px var(--dark), 0 0 0 0px currentColor; }
+      to   { box-shadow: 0 0 0 4px var(--dark), 0 0 8px 4px currentColor; }
+    }
+
+    .tl-step-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      opacity: 0.6;
+    }
+    .tl-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .tl-files {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .file-chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: 0.82rem;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .file-chip:hover { background: rgba(255,255,255,0.12); }
+    .tl-rationale {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.65);
+      border-left: 3px solid var(--border);
+      padding-left: 12px;
+      margin-top: 8px;
+    }
+
+    /* ── ② DEPENDENCY GRAPH ──────────────────────────────────────────── */
+    #dependency { margin-bottom: 80px; }
+
+    .dep-graph {
+      overflow-x: auto;
+      padding: 12px;
+    }
+    .dep-svg-wrapper {
+      min-width: 900px;
+    }
+    svg.dep {
+      width: 100%;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* ── ③ LIFECYCLE FLOW ────────────────────────────────────────────── */
+    #lifecycle { margin-bottom: 80px; }
+
+    .flow-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    .flow-node {
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      min-width: 140px;
+      text-align: center;
+      position: relative;
+      animation: pop-in 0.5s ease both;
+    }
+    .flow-node .node-icon { font-size: 2rem; display: block; }
+    .flow-node .node-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 6px;
+      line-height: 1.3;
+    }
+    @keyframes pop-in {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1);   }
+    }
+
+    .flow-arrow {
+      font-size: 1.6rem;
+      color: rgba(255,255,255,0.4);
+      padding: 0 4px;
+      animation: arrow-pulse 1.5s ease-in-out infinite alternate;
+      flex-shrink: 0;
+    }
+    @keyframes arrow-pulse {
+      from { color: rgba(255,255,255,0.2); transform: translateX(0); }
+      to   { color: rgba(255,255,255,0.8); transform: translateX(4px); }
+    }
+
+    /* ── ④ RATIONALE CARDS GRID ──────────────────────────────────────── */
+    #rationale { margin-bottom: 80px; }
+
+    .rationale-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .rat-card {
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      animation: fade-in-up 0.6s ease both;
+    }
+    .rat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: inherit;
+      opacity: 0.08;
+      z-index: 0;
+    }
+    .rat-card > * { position: relative; z-index: 1; }
+    .rat-card .rat-icon { font-size: 2.4rem; }
+    .rat-card .rat-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 8px 0 6px;
+    }
+    .rat-card .rat-text {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.6;
+    }
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .rat-card:nth-child(1)  { animation-delay: 0.05s; }
+    .rat-card:nth-child(2)  { animation-delay: 0.12s; }
+    .rat-card:nth-child(3)  { animation-delay: 0.19s; }
+    .rat-card:nth-child(4)  { animation-delay: 0.26s; }
+    .rat-card:nth-child(5)  { animation-delay: 0.33s; }
+    .rat-card:nth-child(6)  { animation-delay: 0.40s; }
+    .rat-card:nth-child(7)  { animation-delay: 0.47s; }
+    .rat-card:nth-child(8)  { animation-delay: 0.54s; }
+
+    /* ── ⑤ OKR TABLE ─────────────────────────────────────────────────── */
+    #okrs { margin-bottom: 80px; }
+
+    .okr-accordion details {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .okr-accordion details[open] {
+      box-shadow: 0 0 0 2px var(--teal);
+    }
+    .okr-accordion summary {
+      padding: 16px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      list-style: none;
+      user-select: none;
+    }
+    .okr-accordion summary::-webkit-details-marker { display: none; }
+    .okr-accordion summary .chevron {
+      margin-left: auto;
+      transition: transform 0.3s;
+      color: rgba(255,255,255,0.5);
+    }
+    .okr-accordion details[open] summary .chevron { transform: rotate(180deg); }
+    .okr-body {
+      padding: 0 20px 20px;
+    }
+    .okr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .okr-table th {
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .okr-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .okr-table tr:last-child td { border-bottom: none; }
+    .okr-table td:first-child {
+      width: 60px;
+      font-weight: 700;
+      font-family: monospace;
+      color: var(--teal);
+    }
+    .status-done { color: var(--green); }
+    .status-pending { color: var(--yellow); }
+
+    /* ── ⑥ POC COMPLETION CHECKLIST ─────────────────────────────────── */
+    #completion { margin-bottom: 80px; }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      animation: fade-in-up 0.5s ease both;
+    }
+    .check-item.done { border-color: rgba(45,198,83,0.4); }
+    .check-item.pending { border-color: rgba(255,214,10,0.3); }
+    .check-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .done   .check-icon { background: rgba(45,198,83,0.2);  color: var(--green);  }
+    .pending .check-icon { background: rgba(255,214,10,0.15); color: var(--yellow); }
+    .check-text { font-size: 0.9rem; line-height: 1.5; }
+    .check-text strong { display: block; margin-bottom: 2px; }
+
+    /* ── Animated connecting arrows (CSS only) ───────────────────────── */
+    .arrow-down {
+      display: flex;
+      justify-content: center;
+      padding: 8px 0;
+    }
+    .arrow-down span {
+      font-size: 1.8rem;
+      color: rgba(255,255,255,0.35);
+      animation: bounce-down 1.2s ease-in-out infinite;
+    }
+    @keyframes bounce-down {
+      0%, 100% { transform: translateY(0); opacity: 0.4; }
+      50%       { transform: translateY(6px); opacity: 1; }
+    }
+
+    /* ── Stars / particle background ────────────────────────────────── */
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle var(--dur) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: var(--min-opacity); }
+      to   { opacity: var(--max-opacity); }
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: #2a2f45; border-radius: 4px; }
+
+    /* ── Utility color classes ───────────────────────────────────────── */
+    .c-blue   { color: var(--blue); }
+    .c-purple { color: var(--purple); }
+    .c-pink   { color: var(--pink); }
+    .c-orange { color: var(--orange); }
+    .c-green  { color: var(--green); }
+    .c-teal   { color: var(--teal); }
+    .c-yellow { color: var(--yellow); }
+    .c-red    { color: var(--red); }
+
+    .bg-blue   { background: rgba(67,97,238,0.2);  border-color: rgba(67,97,238,0.5); }
+    .bg-purple { background: rgba(155,89,182,0.2); border-color: rgba(155,89,182,0.5); }
+    .bg-pink   { background: rgba(232,67,147,0.2); border-color: rgba(232,67,147,0.5); }
+    .bg-orange { background: rgba(247,127,0,0.2);  border-color: rgba(247,127,0,0.5); }
+    .bg-green  { background: rgba(45,198,83,0.2);  border-color: rgba(45,198,83,0.5); }
+    .bg-teal   { background: rgba(0,180,216,0.2);  border-color: rgba(0,180,216,0.5); }
+    .bg-yellow { background: rgba(255,214,10,0.15); border-color: rgba(255,214,10,0.4); }
+    .bg-red    { background: rgba(230,57,70,0.2);  border-color: rgba(230,57,70,0.5); }
+    .bg-cyan   { background: rgba(72,202,228,0.15); border-color: rgba(72,202,228,0.4); }
+    .bg-indigo { background: rgba(109,106,207,0.2); border-color: rgba(109,106,207,0.5); }
+
+    .dot-blue   { background: var(--blue);   color: #fff; }
+    .dot-purple { background: var(--purple); color: #fff; }
+    .dot-pink   { background: var(--pink);   color: #fff; }
+    .dot-orange { background: var(--orange); color: #fff; }
+    .dot-green  { background: var(--green);  color: #fff; }
+    .dot-teal   { background: var(--teal);   color: #fff; }
+    .dot-yellow { background: var(--yellow); color: var(--text-dark); }
+    .dot-red    { background: var(--red);    color: #fff; }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--teal); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Particle background ──────────────────────────────────────────── -->
+<div class="stars" id="stars-bg"></div>
+
+<!-- ── HEADER ──────────────────────────────────────────────────────── -->
+<header>
+  <h1>🚀 Streamlit PoC — Creation Flow &amp; Rationale</h1>
+  <p>A visual map of every file, dependency, and decision in this Quantitative Analysis Proof-of-Concept</p>
+</header>
+
+<main>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       SECTION 1 — CREATION ORDER TIMELINE
+  ═════════════════════════════════════════════════════════════════ -->
+  <section id="creation-order">
+    <h2 class="section-title"><span>📅</span> Creation Order — Step by Step</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:28px;">
+      Each step below represents the order in which files and infrastructure should be created,
+      together with the <em>rationale</em> explaining <strong>why</strong> that order matters.
+    </p>
+
+    <div class="timeline">
+
+      <!-- STEP 1 -->
+      <div class="tl-item">
+        <div class="tl-dot dot-blue" style="color:#4361ee;">1</div>
+        <div class="card tl-content bg-blue">
+          <div class="tl-step-label c-blue">Step 1 · Concept &amp; Context</div>
+          <div class="tl-title">📋 Define the Objective &amp; Conventions</div>
+          <div class="tl-files">
+            <span class="file-chip">📄 copilot.md</span>
+            <span class="file-chip">📄 real.md</span>
+            <span class="file-chip">📄 formula_architecture.md</span>
+            <span class="file-chip">📄 environment.md</span>
+          </div>
+          <p class="tl-rationale">
+            Before writing a single line of code, document the <strong>OKRs</strong>, tech-stack decisions,
+            and coding conventions. These files feed AI pair-programming tools (GitHub Copilot) and ensure
+            every contributor shares the same mental model. <code>environment.md</code> is written first
+            because it clarifies which secrets and URLs must exist before deployment can succeed.
+          </p>
+        </div>
+      </div>
+
+      <div class="arrow-down"><span>⬇</span></div>
+
+      <!-- STEP 2 -->
+      <div class="tl-item">
+        <div class="tl-dot dot-purple" style="color:#9b59b6;">2</div>
+        <div class="card tl-content bg-purple">
+          <div class="tl-step-label c-purple">Step 2 · Python Dependencies</div>
+          <div class="tl-title">📦 Pin Runtime Libraries</div>
+          <div class="tl-files">
+            <span class="file-chip">📄 requirements.txt</span>
+          </div>
+          <p class="tl-rationale">
+            Declaring dependencies before writing application code ensures reproducibility.
+            <strong>Streamlit ≥ 1.32</strong>, pandas, NumPy, Plotly, and yfinance are pinned here.
+            Both the local <code>pip install</code> workflow and the Docker build reference this file,
+            so it is the single source of truth for the Python environment.
+          </p>
+        </div>
+      </div>
+
+      <div class="arrow-down"><span>⬇</span></div>
+
+      <!-- STEP 3 -->
+      <div class="tl-item">
+        <div class="tl-dot dot-teal" style="color:#00b4d8;">3</div>
+        <div class="card tl-content bg-teal">
+          <div class="tl-step-label c-teal">Step 3 · Analysis Logic</div>
+          <div class="tl-title">🔬 Pure Helper Functions</div>
+          <div class="tl-files">
+            <span class="file-chip">🐍 utils.py</span>
+          </div>
+          <p class="tl-rationale">
+            <code>utils.py</code> contains only pure functions with no Streamlit imports:
+            <strong>compute_returns()</strong>, <strong>compute_rolling_average()</strong>,
+            <strong>compute_z_scores()</strong>, <strong>get_numeric_columns()</strong>,
+            <strong>get_sample_data()</strong>, and <strong>try_fetch_yfinance()</strong>.
+            Separating these from the UI layer means they can be unit-tested independently and
+            reused in scripts or notebooks.
+          </p>
+        </div>
+      </div>
+
+      <div class="arrow-down"><span>⬇</span></div>
+
+      <!-- STEP 4 -->
+      <div class="tl-item">
+        <div class="tl-dot dot-pink" style="color:#e84393;">4</div>
+        <div class="card tl-content bg-pink">
+          <div class="tl-step-label c-pink">Step 4 · Web Application</div>
+          <div class="tl-title">🖥️ Streamlit UI Entry Point</div>
+          <div class="tl-files">
+            <span class="file-chip">🐍 app.py</span>
+          </div>
+          <p class="tl-rationale">
+            The main application imports from <code>utils.py</code> and builds four analysis tabs:
+            <strong>📋 Data</strong> · <strong>📊 Stats</strong> · <strong>📉 Charts</strong> · <strong>💡 Insights</strong>.
+            Written after <code>utils.py</code> because the UI is purely a consumer of the helper
+            layer — this keeps the dependency arrow pointing in only one direction.
+          </p>
+        </div>
+      </div>
+
+      <div class="arrow-down"><span>⬇</span></div>
+
+      <!-- STEP 5 -->
+      <div class="tl-item">
+        <div class="tl-dot dot-orange" style="color:#f77f00;">5</div>
+        <div class="card tl-content bg-orange">
+          <div class="tl-step-label c-orange">Step 5 · Containerisation</div>
+          <div class="tl-title">🐳 Docker Image Definition</div>
+          <div class="tl-files">
+            <span class="file-chip">🐳 Dockerfile</span>
+          </div>
+          <p class="tl-rationale">
+            A multi-stage build: <strong>Stage 1 (builder)</strong> installs dependencies into
+            <code>/opt/venv</code>; <strong>Stage 2 (runtime)</strong> copies only the venv and
+            app source into a slim Python 3.11 image, running as a non-root <code>appuser</code>.
+            The Dockerfile is written after the app code is stable because it packages exactly
+            those two files (<code>app.py</code> + <code>utils.py</code>) and
+            <code>requirements.txt</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="arrow-down"><span>⬇</span></div>
+
+      <!-- STEP 6 -->
+      <div class="tl-item">
+        <div class="tl-dot dot-yellow" style="color:var(--yellow-dark);">6</div>
+        <div class="card tl-content bg-yellow">
+          <div class="tl-step-label c-yellow">Step 6 · Infrastructure Config</div>
+          <div class="tl-title">☁️ Fly.io Configuration Template</div>
+          <div class="tl-files">
+            <span class="file-chip">⚙️ fly.toml.example</span>
+            <span class="file-chip">⚙️ fly.toml <span class="badge" style="background:rgba(255,214,10,0.3);color:#ffd60a;">generated</span></span>
+          </div>
+          <p class="tl-rationale">
+            <code>fly.toml.example</code> is committed as a reference configuration showing the
+            expected shape (port 8501, health-check path, auto-stop settings).
+            The live <code>fly.toml</code> is <em>generated</em> by <code>fly-setup.sh</code>
+            at <code>make create</code> time and is gitignored when customised, preventing
+            app-name collisions between contributors.
+          </p>
+        </div>
+      </div>
+
+      <div class="arrow-down"><span>⬇</span></div>
+
+      <!-- STEP 7 -->
+      <div class="tl-item">
+        <div class="tl-dot dot-green" style="color:#2dc653;">7</div>
+        <div class="card tl-content bg-green">
+          <div class="tl-step-label c-green">Step 7 · Developer Automation</div>
+          <div class="tl-title">🔧 Scripts &amp; Makefile</div>
+          <div class="tl-files">
+            <span class="file-chip">🔧 scripts/check-prereqs.sh</span>
+            <span class="file-chip">🔧 scripts/fly-setup.sh</span>
+            <span class="file-chip">🔧 scripts/fly-destroy.sh</span>
+            <span class="file-chip">📋 Makefile</span>
+          </div>
+          <p class="tl-rationale">
+            Shell scripts use <code>set -euo pipefail</code> and coloured
+            <code>ok / info / warn / die</code> helpers for a polished developer experience.
+            The Makefile wraps all scripts with memorable short commands
+            (<code>make create</code>, <code>make deploy</code>, <code>make destroy</code>)
+            and declares <code>check-prereqs</code> as a dependency of every lifecycle target
+            to prevent half-initialised states.
+          </p>
+        </div>
+      </div>
+
+      <div class="arrow-down"><span>⬇</span></div>
+
+      <!-- STEP 8 -->
+      <div class="tl-item">
+        <div class="tl-dot dot-red" style="color:#e63946;">8</div>
+        <div class="card tl-content bg-red">
+          <div class="tl-step-label c-red">Step 8 · CI/CD &amp; GitHub Pages</div>
+          <div class="tl-title">🤖 Automated Pipelines</div>
+          <div class="tl-files">
+            <span class="file-chip">⚙️ .github/workflows/deploy.yml</span>
+            <span class="file-chip">⚙️ .github/workflows/static.yml</span>
+            <span class="file-chip">🌐 index.html</span>
+            <span class="file-chip">📄 README.md</span>
+            <span class="file-chip">📄 contributor.md</span>
+          </div>
+          <p class="tl-rationale">
+            <code>deploy.yml</code> triggers on every push to <code>main</code> and runs
+            <code>flyctl deploy --remote-only</code> — no local Docker daemon required.
+            <code>static.yml</code> deploys <code>index.html</code> to GitHub Pages, substituting
+            the <code>__FLY_APP_URL__</code> placeholder with the <code>FLY_APP_URL</code> secret
+            so the iframe always points at the correct Fly.io backend.
+            Documentation (<code>README.md</code>) and <code>contributor.md</code> are finalised
+            last when all behaviour is confirmed.
+          </p>
+        </div>
+      </div>
+
+    </div><!-- .timeline -->
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       SECTION 2 — DEPENDENCY GRAPH (SVG)
+  ═════════════════════════════════════════════════════════════════ -->
+  <section id="dependency">
+    <h2 class="section-title"><span>🔗</span> File Dependency Graph</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:24px;">
+      Arrows show "depends on / consumes" relationships. Thicker arrows indicate
+      stronger coupling. Hover nodes for a tooltip.
+    </p>
+
+    <div class="dep-graph card" style="padding:24px;">
+      <div class="dep-svg-wrapper">
+        <svg class="dep" viewBox="0 0 1000 580" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Arrow markers -->
+            <marker id="arr-blue"   markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#4361ee"/>
+            </marker>
+            <marker id="arr-teal"   markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#00b4d8"/>
+            </marker>
+            <marker id="arr-green"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#2dc653"/>
+            </marker>
+            <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#f77f00"/>
+            </marker>
+            <marker id="arr-pink"   markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#e84393"/>
+            </marker>
+            <marker id="arr-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#9b59b6"/>
+            </marker>
+            <marker id="arr-yellow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#ffd60a"/>
+            </marker>
+            <marker id="arr-red"    markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#e63946"/>
+            </marker>
+
+            <!-- Glow filter -->
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+
+            <!-- Animated dash offset for arrows -->
+            <style>
+              .dep-line { stroke-dasharray: 8 4; animation: flow-dash 1.5s linear infinite; }
+              @keyframes flow-dash { to { stroke-dashoffset: -24; } }
+            </style>
+          </defs>
+
+          <!-- ── Background clusters ── -->
+          <!-- Developer cluster -->
+          <rect x="10" y="10" width="220" height="280" rx="14"
+                fill="rgba(67,97,238,0.06)" stroke="rgba(67,97,238,0.2)" stroke-width="1.5"/>
+          <text x="20" y="30" fill="rgba(67,97,238,0.6)" font-size="11" font-weight="600">👩‍💻 DEVELOPER MACHINE</text>
+
+          <!-- App code cluster -->
+          <rect x="10" y="310" width="220" height="250" rx="14"
+                fill="rgba(0,180,216,0.06)" stroke="rgba(0,180,216,0.2)" stroke-width="1.5"/>
+          <text x="20" y="330" fill="rgba(0,180,216,0.6)" font-size="11" font-weight="600">📦 APPLICATION CODE</text>
+
+          <!-- Fly.io cluster -->
+          <rect x="660" y="10" width="330" height="280" rx="14"
+                fill="rgba(45,198,83,0.06)" stroke="rgba(45,198,83,0.2)" stroke-width="1.5"/>
+          <text x="670" y="30" fill="rgba(45,198,83,0.6)" font-size="11" font-weight="600">☁️ FLY.IO CLOUD</text>
+
+          <!-- CI/CD cluster -->
+          <rect x="660" y="310" width="330" height="140" rx="14"
+                fill="rgba(230,57,70,0.06)" stroke="rgba(230,57,70,0.2)" stroke-width="1.5"/>
+          <text x="670" y="330" fill="rgba(230,57,70,0.6)" font-size="11" font-weight="600">🤖 GITHUB ACTIONS</text>
+
+          <!-- GitHub Pages cluster -->
+          <rect x="660" y="470" width="330" height="100" rx="14"
+                fill="rgba(155,89,182,0.06)" stroke="rgba(155,89,182,0.2)" stroke-width="1.5"/>
+          <text x="670" y="490" fill="rgba(155,89,182,0.6)" font-size="11" font-weight="600">🌐 GITHUB PAGES</text>
+
+          <!-- ── Nodes ── -->
+          <!-- Makefile -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="40" y="50" width="160" height="44" rx="10"
+                  fill="rgba(67,97,238,0.25)" stroke="#4361ee" stroke-width="1.5"/>
+            <text x="120" y="67" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">📋 Makefile</text>
+            <text x="120" y="83" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">make create / deploy / destroy</text>
+          </g>
+
+          <!-- fly-setup.sh -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="40" y="120" width="160" height="44" rx="10"
+                  fill="rgba(67,97,238,0.2)" stroke="#4361ee" stroke-width="1.2"/>
+            <text x="120" y="137" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">🔧 fly-setup.sh</text>
+            <text x="120" y="153" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">interactive creation wizard</text>
+          </g>
+
+          <!-- fly-destroy.sh -->
+          <g class="dep-node">
+            <rect x="40" y="188" width="160" height="44" rx="10"
+                  fill="rgba(230,57,70,0.15)" stroke="#e63946" stroke-width="1.2"/>
+            <text x="120" y="205" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">💥 fly-destroy.sh</text>
+            <text x="120" y="221" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">teardown with confirmation</text>
+          </g>
+
+          <!-- fly.toml -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="40" y="255" width="160" height="44" rx="10"
+                  fill="rgba(255,214,10,0.15)" stroke="#ffd60a" stroke-width="1.5"/>
+            <text x="120" y="272" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">⚙️ fly.toml</text>
+            <text x="120" y="288" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">generated config (port 8501)</text>
+          </g>
+
+          <!-- requirements.txt -->
+          <g class="dep-node">
+            <rect x="40" y="345" width="160" height="44" rx="10"
+                  fill="rgba(155,89,182,0.2)" stroke="#9b59b6" stroke-width="1.2"/>
+            <text x="120" y="362" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">📄 requirements.txt</text>
+            <text x="120" y="378" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">5 pinned Python libs</text>
+          </g>
+
+          <!-- utils.py -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="40" y="413" width="160" height="44" rx="10"
+                  fill="rgba(0,180,216,0.2)" stroke="#00b4d8" stroke-width="1.5"/>
+            <text x="120" y="430" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">🐍 utils.py</text>
+            <text x="120" y="446" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">compute_returns, z_scores …</text>
+          </g>
+
+          <!-- app.py -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="40" y="481" width="160" height="44" rx="10"
+                  fill="rgba(232,67,147,0.2)" stroke="#e84393" stroke-width="1.5"/>
+            <text x="120" y="498" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">🐍 app.py</text>
+            <text x="120" y="514" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">4 tabs · UI entry point</text>
+          </g>
+
+          <!-- Dockerfile -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="270" y="390" width="160" height="44" rx="10"
+                  fill="rgba(247,127,0,0.2)" stroke="#f77f00" stroke-width="1.5"/>
+            <text x="350" y="407" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">🐳 Dockerfile</text>
+            <text x="350" y="423" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">multi-stage · non-root user</text>
+          </g>
+
+          <!-- Remote Builder -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="690" y="50" width="170" height="44" rx="10"
+                  fill="rgba(45,198,83,0.2)" stroke="#2dc653" stroke-width="1.5"/>
+            <text x="775" y="67" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">🏗️ Remote Builder</text>
+            <text x="775" y="83" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">fly deploy --remote-only</text>
+          </g>
+
+          <!-- Fly Machine -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="690" y="130" width="170" height="44" rx="10"
+                  fill="rgba(45,198,83,0.25)" stroke="#2dc653" stroke-width="2"/>
+            <text x="775" y="147" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">🖥️ Fly Machine</text>
+            <text x="775" y="163" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">Docker container :8501</text>
+          </g>
+
+          <!-- Health Check -->
+          <g class="dep-node">
+            <rect x="690" y="205" width="170" height="44" rx="10"
+                  fill="rgba(45,198,83,0.12)" stroke="#2dc653" stroke-width="1"/>
+            <text x="775" y="222" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">💚 Health Check</text>
+            <text x="775" y="238" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">/_stcore/health</text>
+          </g>
+
+          <!-- deploy.yml -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="690" y="345" width="170" height="44" rx="10"
+                  fill="rgba(230,57,70,0.2)" stroke="#e63946" stroke-width="1.5"/>
+            <text x="775" y="362" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">⚙️ deploy.yml</text>
+            <text x="775" y="378" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">push main → flyctl deploy</text>
+          </g>
+
+          <!-- index.html -->
+          <g class="dep-node" filter="url(#glow)">
+            <rect x="690" y="490" width="170" height="44" rx="10"
+                  fill="rgba(155,89,182,0.2)" stroke="#9b59b6" stroke-width="1.5"/>
+            <text x="775" y="507" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">🌐 index.html</text>
+            <text x="775" y="523" fill="rgba(255,255,255,0.55)" font-size="9" text-anchor="middle">GitHub Pages iframe</text>
+          </g>
+
+          <!-- ── Edges ── -->
+          <!-- Makefile → fly-setup.sh -->
+          <line x1="120" y1="94" x2="120" y2="120" class="dep-line"
+                stroke="#4361ee" stroke-width="2" marker-end="url(#arr-blue)"/>
+          <!-- Makefile → fly-destroy.sh -->
+          <line x1="90" y1="94" x2="70" y2="188" class="dep-line"
+                stroke="#e63946" stroke-width="1.5" marker-end="url(#arr-red)"/>
+          <!-- fly-setup.sh → fly.toml -->
+          <line x1="120" y1="164" x2="120" y2="255" class="dep-line"
+                stroke="#ffd60a" stroke-width="2" marker-end="url(#arr-yellow)"/>
+
+          <!-- requirements.txt → Dockerfile -->
+          <line x1="200" y1="367" x2="270" y2="400" class="dep-line"
+                stroke="#f77f00" stroke-width="2" marker-end="url(#arr-orange)"/>
+          <!-- utils.py → app.py -->
+          <line x1="120" y1="457" x2="120" y2="481" class="dep-line"
+                stroke="#e84393" stroke-width="2.5" marker-end="url(#arr-pink)"/>
+          <!-- app.py → Dockerfile -->
+          <line x1="200" y1="503" x2="270" y2="420" class="dep-line"
+                stroke="#f77f00" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+          <!-- utils.py → Dockerfile -->
+          <line x1="200" y1="440" x2="270" y2="408" class="dep-line"
+                stroke="#f77f00" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+
+          <!-- Dockerfile → Remote Builder -->
+          <line x1="430" y1="412" x2="690" y2="80" class="dep-line"
+                stroke="#2dc653" stroke-width="2" marker-end="url(#arr-green)"/>
+          <!-- fly.toml → Remote Builder -->
+          <line x1="200" y1="277" x2="690" y2="72" class="dep-line"
+                stroke="#2dc653" stroke-width="1.5" marker-end="url(#arr-green)"/>
+          <!-- fly-setup.sh → Remote Builder (deploy) -->
+          <line x1="200" y1="142" x2="690" y2="63" class="dep-line"
+                stroke="#2dc653" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr-green)"/>
+
+          <!-- Remote Builder → Fly Machine -->
+          <line x1="775" y1="94" x2="775" y2="130" class="dep-line"
+                stroke="#2dc653" stroke-width="2.5" marker-end="url(#arr-green)"/>
+          <!-- Fly Machine → Health Check -->
+          <line x1="775" y1="174" x2="775" y2="205" class="dep-line"
+                stroke="#2dc653" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+          <!-- deploy.yml → Remote Builder -->
+          <line x1="775" y1="345" x2="775" y2="94" class="dep-line"
+                stroke="#e63946" stroke-width="2" marker-end="url(#arr-red)"/>
+
+          <!-- index.html → Fly Machine (iframe) -->
+          <line x1="775" y1="490" x2="860" y2="174" class="dep-line"
+                stroke="#9b59b6" stroke-width="1.5" marker-end="url(#arr-purple)"/>
+
+          <!-- Makefile → deploy.yml (triggers) edge label -->
+          <line x1="200" y1="72" x2="690" y2="360" class="dep-line"
+                stroke="#4361ee" stroke-width="1" stroke-dasharray="3 6" marker-end="url(#arr-blue)"/>
+
+          <!-- Legend -->
+          <text x="480" y="560" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle">
+            Dashed lines = optional / trigger paths  ·  Animated lines = active data/build flows
+          </text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       SECTION 3 — INFRASTRUCTURE LIFECYCLE FLOW
+  ═════════════════════════════════════════════════════════════════ -->
+  <section id="lifecycle">
+    <h2 class="section-title"><span>🔄</span> Infrastructure Lifecycle Flow</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:28px;">
+      From a fresh clone to a running, self-healing Fly.io deployment — and back to zero.
+    </p>
+
+    <!-- Row 1: Create path -->
+    <div class="card" style="margin-bottom:20px;padding:28px 20px;">
+      <div style="font-size:0.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:20px;">
+        🟢 CREATE PATH
+      </div>
+      <div class="flow-row" style="justify-content:space-around;">
+        <div class="flow-node bg-blue" style="animation-delay:0s">
+          <span class="node-icon">📦</span>
+          <div class="node-label">Repo Cloned<br><small style="opacity:.6">git clone</small></div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-indigo" style="animation-delay:0.1s">
+          <span class="node-icon">✅</span>
+          <div class="node-label">make<br>check-prereqs</div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-yellow" style="animation-delay:0.2s">
+          <span class="node-icon">❓</span>
+          <div class="node-label">Wizard Q1–Q5<br><small style="opacity:.6">fly-setup.sh</small></div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-orange" style="animation-delay:0.3s">
+          <span class="node-icon">⚙️</span>
+          <div class="node-label">fly.toml<br><small style="opacity:.6">written</small></div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-green" style="animation-delay:0.4s">
+          <span class="node-icon">🏗️</span>
+          <div class="node-label">fly apps<br>create</div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-teal" style="animation-delay:0.5s">
+          <span class="node-icon">🐳</span>
+          <div class="node-label">Remote<br>Docker Build</div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-green" style="animation-delay:0.6s">
+          <span class="node-icon">🖥️</span>
+          <div class="node-label">Fly Machine<br><small style="opacity:.6">Running :8501</small></div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-pink" style="animation-delay:0.7s">
+          <span class="node-icon">💚</span>
+          <div class="node-label">Health ✔<br><small style="opacity:.6">/_stcore/health</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Operate path -->
+    <div class="card" style="margin-bottom:20px;padding:28px 20px;">
+      <div style="font-size:0.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:20px;">
+        🔵 OPERATE PATH (auto-stop / auto-start)
+      </div>
+      <div class="flow-row" style="justify-content:center;gap:16px;">
+        <div class="flow-node bg-green" style="animation-delay:0.1s">
+          <span class="node-icon">▶️</span>
+          <div class="node-label">Running</div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-yellow" style="animation-delay:0.2s">
+          <span class="node-icon">😴</span>
+          <div class="node-label">Idle → Stopped<br><small style="opacity:.6">auto-stop</small></div>
+        </div>
+        <div class="flow-arrow" style="transform:scaleX(-1)">➜</div>
+        <div class="flow-node bg-teal" style="animation-delay:0.3s">
+          <span class="node-icon">⚡</span>
+          <div class="node-label">Request arrives<br><small style="opacity:.6">auto-start ≈ 2s</small></div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-green" style="animation-delay:0.4s">
+          <span class="node-icon">▶️</span>
+          <div class="node-label">Running<br><small style="opacity:.6">again</small></div>
+        </div>
+        <div style="display:flex;align-items:center;padding:0 12px;color:rgba(255,255,255,0.35);font-size:0.8rem;">
+          ↺ repeats until <code>make destroy</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Destroy path -->
+    <div class="card" style="padding:28px 20px;">
+      <div style="font-size:0.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:20px;">
+        🔴 DESTROY PATH
+      </div>
+      <div class="flow-row" style="justify-content:space-around;">
+        <div class="flow-node bg-red" style="animation-delay:0.1s">
+          <span class="node-icon">💥</span>
+          <div class="node-label">make destroy</div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-orange" style="animation-delay:0.2s">
+          <span class="node-icon">⌨️</span>
+          <div class="node-label">Type app name<br><small style="opacity:.6">confirmation guard</small></div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-red" style="animation-delay:0.3s">
+          <span class="node-icon">🗑️</span>
+          <div class="node-label">VMs stopped<br>&amp; removed</div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-red" style="animation-delay:0.4s">
+          <span class="node-icon">💾</span>
+          <div class="node-label">Volumes<br>deleted</div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node bg-red" style="animation-delay:0.5s">
+          <span class="node-icon">🔒</span>
+          <div class="node-label">Certs &amp;<br>Secrets purged</div>
+        </div>
+        <div class="flow-arrow">➜</div>
+        <div class="flow-node" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);animation-delay:0.6s">
+          <span class="node-icon">🌑</span>
+          <div class="node-label">Zero resources<br><small style="opacity:.6">zero cost</small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       SECTION 4 — RATIONALE CARDS
+  ═════════════════════════════════════════════════════════════════ -->
+  <section id="rationale">
+    <h2 class="section-title"><span>💡</span> Rationale Behind Each Decision</h2>
+
+    <div class="rationale-grid">
+
+      <div class="rat-card card bg-blue">
+        <div class="rat-icon">🐍</div>
+        <div class="rat-title">Why Streamlit?</div>
+        <div class="rat-text">
+          Streamlit turns Python data-science scripts into interactive web apps with zero front-end code.
+          A single <code>streamlit run app.py</code> gives us tabs, sliders, charts, and data-upload —
+          ideal for a PoC that must demonstrate value quickly without a JavaScript framework.
+        </div>
+      </div>
+
+      <div class="rat-card card bg-teal">
+        <div class="rat-icon">📊</div>
+        <div class="rat-title">Why pandas + Plotly + yfinance?</div>
+        <div class="rat-text">
+          pandas handles tabular data manipulation and filtering.
+          Plotly renders interactive, publication-quality charts (heatmaps, time-series, histograms).
+          yfinance provides free, real-time market data for AAPL, MSFT, GOOGL — making the PoC
+          immediately useful without any API keys.
+        </div>
+      </div>
+
+      <div class="rat-card card bg-purple">
+        <div class="rat-icon">🐳</div>
+        <div class="rat-title">Why multi-stage Docker?</div>
+        <div class="rat-text">
+          Stage 1 (builder) installs <code>build-essential</code> and compiles any C-extension
+          wheels. Stage 2 (runtime) copies only <code>/opt/venv</code> and the two app files,
+          keeping the final image small and free of build toolchain. A non-root <code>appuser</code>
+          reduces the attack surface.
+        </div>
+      </div>
+
+      <div class="rat-card card bg-orange">
+        <div class="rat-icon">☁️</div>
+        <div class="rat-title">Why Fly.io?</div>
+        <div class="rat-text">
+          Fly.io supports <code>fly deploy --remote-only</code> — no local Docker daemon needed.
+          Auto-stop / auto-start scales the VM to zero when idle (cost ≈ $0) and wakes it
+          in ~2 s on the next request. The free tier fits a PoC with &lt; 100 daily users
+          on a $1/month budget.
+        </div>
+      </div>
+
+      <div class="rat-card card bg-yellow">
+        <div class="rat-icon">⚙️</div>
+        <div class="rat-title">Why a Makefile?</div>
+        <div class="rat-text">
+          Short, memorable commands (<code>make create</code>) abstract away multi-step
+          <code>flyctl</code> sequences. <code>check-prereqs</code> is declared as a
+          dependency of every lifecycle target so you can never accidentally run
+          <code>make deploy</code> without a validated environment.
+        </div>
+      </div>
+
+      <div class="rat-card card bg-green">
+        <div class="rat-icon">🤖</div>
+        <div class="rat-title">Why GitHub Actions CI/CD?</div>
+        <div class="rat-text">
+          Every push to <code>main</code> triggers <code>deploy.yml</code> which calls
+          <code>flyctl deploy --remote-only</code> with only the <code>FLY_API_TOKEN</code> secret.
+          No credentials are ever hardcoded. Failed deployments surface immediately as a red check
+          in the PR status.
+        </div>
+      </div>
+
+      <div class="rat-card card bg-pink">
+        <div class="rat-icon">🌐</div>
+        <div class="rat-title">Why GitHub Pages + iframe?</div>
+        <div class="rat-text">
+          GitHub Pages gives a stable, branded URL
+          (<code>rifaterdemsahin.github.io/streamlit/</code>) for free.
+          The <code>index.html</code> iframe embeds the Fly.io backend, so the compute
+          runs on Fly.io while the entry-point URL never changes. The
+          <code>__FLY_APP_URL__</code> placeholder is replaced at deploy time, so
+          updating the backend URL requires only a secret change — not a code edit.
+        </div>
+      </div>
+
+      <div class="rat-card card bg-indigo">
+        <div class="rat-icon">📄</div>
+        <div class="rat-title">Why utils.py separation?</div>
+        <div class="rat-text">
+          Pure helper functions live in <code>utils.py</code> with no Streamlit imports.
+          This means they can be unit-tested without starting a Streamlit server and can
+          be imported by future scripts, notebooks, or data pipelines without dragging in
+          the entire UI stack.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       SECTION 5 — OKRs ACCORDION
+  ═════════════════════════════════════════════════════════════════ -->
+  <section id="okrs">
+    <h2 class="section-title"><span>🎯</span> Objectives &amp; Key Results</h2>
+
+    <div class="okr-accordion">
+
+      <details open>
+        <summary>
+          <span>🏗️</span>
+          O1 — Background resource creation works reliably
+          <span class="chevron">▼</span>
+        </summary>
+        <div class="okr-body">
+          <table class="okr-table">
+            <tr><th>#</th><th>Key Result</th><th>Measure</th></tr>
+            <tr><td>KR1.1</td><td><code>fly apps create</code> succeeds without portal intervention</td><td>Zero portal visits</td></tr>
+            <tr><td>KR1.2</td><td>Remote Docker build completes without local daemon</td><td><code>fly deploy --remote-only</code> exits 0</td></tr>
+            <tr><td>KR1.3</td><td>App reachable at <code>https://&lt;name&gt;.fly.dev</code> within 5 min</td><td>p95 &lt; 5 min</td></tr>
+            <tr><td>KR1.4</td><td><code>fly.toml</code> written correctly (port 8501, health-check, memory)</td><td>Validated by <code>make check-prereqs</code></td></tr>
+          </table>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <span>💥</span>
+          O2 — Background resource destruction is complete and safe
+          <span class="chevron">▼</span>
+        </summary>
+        <div class="okr-body">
+          <table class="okr-table">
+            <tr><th>#</th><th>Key Result</th><th>Measure</th></tr>
+            <tr><td>KR2.1</td><td>All VMs stopped and removed</td><td><code>fly machines list</code> empty</td></tr>
+            <tr><td>KR2.2</td><td>All volumes deleted</td><td><code>fly volumes list</code> empty</td></tr>
+            <tr><td>KR2.3</td><td>All TLS certificates revoked</td><td><code>fly certs list</code> empty</td></tr>
+            <tr><td>KR2.4</td><td>All secrets purged</td><td><code>fly secrets list</code> empty</td></tr>
+            <tr><td>KR2.5</td><td>Typed-name confirmation prevents accidental deletion</td><td>Wrong input = clean abort</td></tr>
+            <tr><td>KR2.6</td><td>Local <code>fly.toml</code> optionally removed</td><td>User prompted; default = remove</td></tr>
+          </table>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <span>💰</span>
+          O3 — Cost is effectively zero when idle
+          <span class="chevron">▼</span>
+        </summary>
+        <div class="okr-body">
+          <table class="okr-table">
+            <tr><th>#</th><th>Key Result</th><th>Measure</th></tr>
+            <tr><td>KR3.1</td><td><code>auto_stop_machines = true</code> in <code>fly.toml</code></td><td>Confirmed in generated config</td></tr>
+            <tr><td>KR3.2</td><td><code>min_machines_running = 0</code></td><td>Fly.io scales to zero</td></tr>
+            <tr><td>KR3.3</td><td>VM wakes and serves first request within 5 s</td><td>Browser DevTools measurement</td></tr>
+            <tr><td>KR3.4</td><td>Monthly bill &lt; $1 for ≤ 100 daily active users</td><td>Fly.io pricing estimate</td></tr>
+          </table>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <span>📈</span>
+          O4 — App delivers real analytical value during the demo
+          <span class="chevron">▼</span>
+        </summary>
+        <div class="okr-body">
+          <table class="okr-table">
+            <tr><th>#</th><th>Key Result</th><th>Measure</th></tr>
+            <tr><td>KR4.1</td><td>Sample data loads without network access</td><td>Works on first open</td></tr>
+            <tr><td>KR4.2</td><td>Yahoo Finance fetch returns data for AAPL, MSFT, GOOGL</td><td>Succeeds from Fly.io region</td></tr>
+            <tr><td>KR4.3</td><td>Correlation heatmap, returns chart, z-score chart render</td><td>Zero JS console errors</td></tr>
+            <tr><td>KR4.4</td><td>CSV upload processes a 10k-row file in &lt; 3 s</td><td>Measured in-browser</td></tr>
+          </table>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <span>🤖</span>
+          O5 — CI/CD pipeline keeps the app up to date
+          <span class="chevron">▼</span>
+        </summary>
+        <div class="okr-body">
+          <table class="okr-table">
+            <tr><th>#</th><th>Key Result</th><th>Measure</th></tr>
+            <tr><td>KR5.1</td><td>GitHub Actions workflow runs on every push to <code>main</code></td><td><code>deploy.yml</code> triggers confirmed</td></tr>
+            <tr><td>KR5.2</td><td>Deployment completes within 5 minutes</td><td>GitHub Actions job duration</td></tr>
+            <tr><td>KR5.3</td><td>Failed deployments surface in GitHub Actions UI</td><td>Red check in PR status</td></tr>
+            <tr><td>KR5.4</td><td><code>FLY_API_TOKEN</code> is the only credential needed</td><td>Zero hardcoded tokens</td></tr>
+          </table>
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       SECTION 6 — POC COMPLETION CHECKLIST
+  ═════════════════════════════════════════════════════════════════ -->
+  <section id="completion">
+    <h2 class="section-title"><span>🏁</span> PoC Definition of Done</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:28px;">
+      These are the acceptance criteria that define a fully complete proof-of-concept.
+    </p>
+
+    <div class="checklist">
+      <div class="check-item done" style="animation-delay:0.05s">
+        <div class="check-icon">✅</div>
+        <div class="check-text">
+          <strong>🚀 make create → app live on Fly.io in &lt; 5 minutes</strong>
+          Interactive wizard collects 5 values, writes <code>fly.toml</code>,
+          creates the Fly.io app, and triggers remote Docker build &amp; deploy.
+        </div>
+      </div>
+      <div class="check-item done" style="animation-delay:0.10s">
+        <div class="check-icon">✅</div>
+        <div class="check-text">
+          <strong>📋 All 4 tabs serve without errors</strong>
+          Data · Stats · Charts · Insights all render correctly with sample data,
+          CSV upload, and Yahoo Finance sources.
+        </div>
+      </div>
+      <div class="check-item done" style="animation-delay:0.15s">
+        <div class="check-icon">✅</div>
+        <div class="check-text">
+          <strong>💥 make destroy → zero resources</strong>
+          VMs, volumes, certs, and secrets are all purged.
+          Verified by <code>fly apps list</code> showing empty.
+        </div>
+      </div>
+      <div class="check-item done" style="animation-delay:0.20s">
+        <div class="check-icon">✅</div>
+        <div class="check-text">
+          <strong>🤖 CI pipeline auto-deploys on push to main</strong>
+          <code>deploy.yml</code> triggers on every push and runs
+          <code>flyctl deploy --remote-only</code> with the <code>FLY_API_TOKEN</code> secret.
+        </div>
+      </div>
+      <div class="check-item done" style="animation-delay:0.25s">
+        <div class="check-icon">✅</div>
+        <div class="check-text">
+          <strong>🌐 GitHub Pages iframe serves the live app</strong>
+          <code>static.yml</code> replaces <code>__FLY_APP_URL__</code> in
+          <code>index.html</code> at deploy time so the iframe always points at
+          the correct Fly.io backend.
+        </div>
+      </div>
+      <div class="check-item done" style="animation-delay:0.30s">
+        <div class="check-icon">✅</div>
+        <div class="check-text">
+          <strong>😴 Auto-stop / auto-start works</strong>
+          VM stops when idle (<code>min_machines_running = 0</code>),
+          wakes in ~2 s on next request. Monthly cost &lt; $1.
+        </div>
+      </div>
+      <div class="check-item done" style="animation-delay:0.35s">
+        <div class="check-icon">✅</div>
+        <div class="check-text">
+          <strong>📄 Documentation is up to date</strong>
+          README, copilot.md, real.md, formula_architecture.md, environment.md,
+          and this flow.html are all committed and reflect the current codebase.
+        </div>
+      </div>
+      <div class="check-item done" style="animation-delay:0.40s">
+        <div class="check-icon">✅</div>
+        <div class="check-text">
+          <strong>🔒 No hardcoded secrets</strong>
+          <code>FLY_API_TOKEN</code> and <code>FLY_APP_URL</code> are GitHub
+          Actions secrets. <code>fly.toml</code> is gitignored when customised
+          to prevent app-name leaks.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── FOOTER ───────────────────────────────────────────────────── -->
+<footer>
+  <p>
+    🚀 <a href="https://rifaterdemsahin.github.io/streamlit/" target="_blank">Live App (GitHub Pages)</a>
+    &nbsp;·&nbsp;
+    🐙 <a href="https://github.com/rifaterdemsahin/streamlit" target="_blank">GitHub Repository</a>
+    &nbsp;·&nbsp;
+    📖 Generated from <a href="formula_architecture.md">formula_architecture.md</a>,
+    <a href="copilot.md">copilot.md</a>, <a href="real.md">real.md</a>, and
+    <a href="environment.md">environment.md</a>
+  </p>
+</footer>
+
+<!-- ── PARTICLE STARS SCRIPT ────────────────────────────────────── -->
+<script>
+  (function () {
+    const container = document.getElementById('stars-bg');
+    const N = 120;
+    for (let i = 0; i < N; i++) {
+      const el = document.createElement('div');
+      el.className = 'star';
+      const size = Math.random() * 2.5 + 0.5;
+      el.style.cssText = [
+        `width:${size}px`,
+        `height:${size}px`,
+        `top:${Math.random() * 100}%`,
+        `left:${Math.random() * 100}%`,
+        `--dur:${(Math.random() * 3 + 2).toFixed(1)}s`,
+        `--min-opacity:${(Math.random() * 0.15).toFixed(2)}`,
+        `--max-opacity:${(Math.random() * 0.5 + 0.3).toFixed(2)}`,
+        `animation-delay:${(Math.random() * 3).toFixed(1)}s`,
+      ].join(';');
+      container.appendChild(el);
+    }
+  })();
+</script>
+
+</body>
+</html>

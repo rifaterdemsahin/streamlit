@@ -5,6 +5,33 @@ tools) can give accurate, on-point suggestions for this repository.
 
 ---
 
+## 📂 Project Structure — Self-Learning System
+
+This repository follows the **7-Stage Self-Learning System** framework: _Unknown → Proven_
+
+| Folder | Stage | Purpose |
+|--------|-------|---------|
+| `1_Real_Unknown/` | **The "Why"** | Problem definitions, OKRs, core questions |
+| `2_Environment/` | **The "Context"** | Roadmaps, constraints, setup guides |
+| `3_Simulation/` | **The "Vision"** | UI mockups, image carousel, flow diagrams |
+| `4_Formula/` | **The "Recipe"** | Step-by-step guides, architecture, research |
+| `5_Symbols/` | **The "Reality"** | Core source code and implementation |
+| `6_Semblance/` | **The "Scars"** | Error logs, workarounds, lessons learned |
+| `7_Testing_Known/` | **The "Proof"** | Validation against OKRs, testing checklists |
+
+### Root Files
+- `index.html` — GitHub Pages entry point with navigation
+- `markdown_renderer.html` — renders any `.md` file in the browser
+- `aigent.md` — AI agent persona instructions
+- `robots.txt`, `sitemap.xml` — SEO configuration
+- `.env` — environment variable template
+
+### Navigation
+- **Debug Menu** (cookie-gated): links to all 7 stages via `markdown_renderer.html`
+- **Content Menu**: links to project pages not related to framework navigation
+
+---
+
 ## Project overview
 
 This is a **proof-of-concept (PoC)** Streamlit application for quantitative

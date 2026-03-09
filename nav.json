@@ -1,0 +1,25 @@
+{
+  "debug_menu": [
+    { "label": "1_Real", "path": "1_Real_Unknown/README.md", "emoji": "❓" },
+    { "label": "2_Environment", "path": "2_Environment/README.md", "emoji": "🌍" },
+    { "label": "3_Simulation", "path": "3_Simulation/README.md", "emoji": "🎨" },
+    { "label": "4_Formula", "path": "4_Formula/README.md", "emoji": "🔬" },
+    { "label": "5_Symbols", "path": "5_Symbols/README.md", "emoji": "💻" },
+    { "label": "6_Semblance", "path": "6_Semblance/README.md", "emoji": "🐛" },
+    { "label": "7_Testing", "path": "7_Testing_Known/README.md", "emoji": "🧪" }
+  ],
+  "content_menu": [
+    { "label": "Home", "href": "index.html", "emoji": "🏠" },
+    { "label": "Architecture", "href": "markdown_renderer.html?file=4_Formula/formula_architecture.md", "emoji": "🏗️" },
+    { "label": "OKRs", "href": "markdown_renderer.html?file=1_Real_Unknown/real.md", "emoji": "🎯" },
+    { "label": "Environment Setup", "href": "markdown_renderer.html?file=2_Environment/environment.md", "emoji": "⚙️" },
+    { "label": "Testing", "href": "markdown_renderer.html?file=7_Testing_Known/testing_checklist.md", "emoji": "✅" },
+    { "label": "Contributors", "href": "markdown_renderer.html?file=6_Semblance/contributor.md", "emoji": "👥" },
+    { "label": "Flow Diagram", "href": "3_Simulation/flow.html", "emoji": "📊" }
+  ],
+  "social": [
+    { "label": "GitHub", "href": "https://github.com/rifaterdemsahin/streamlit", "emoji": "🐙" },
+    { "label": "LinkedIn", "href": "https://www.linkedin.com/in/rifaterdemsahin/", "emoji": "🔗" },
+    { "label": "YouTube", "href": "https://www.youtube.com/@RifatErdemSahin", "emoji": "📺" }
+  ]
+}
