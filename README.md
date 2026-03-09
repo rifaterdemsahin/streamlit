@@ -11,8 +11,8 @@ single interactive setup command.
 ## Running locally
 
 ```bash
-pip install -r requirements.txt
-streamlit run app.py
+pip install -r 5_Symbols/requirements.txt
+streamlit run 5_Symbols/app.py
 ```
 
 ---
@@ -77,25 +77,37 @@ make scale          Show current VM count and size settings
 
 ---
 
-## Project structure
+## Project structure — Self-Learning System (Unknown → Proven)
+
+This repository follows a **7-stage learning framework**. Each folder represents one stage of the journey:
+
+| Folder | Stage | Purpose |
+|--------|-------|---------|
+| [`1_Real_Unknown/`](1_Real_Unknown/README.md) | ❓ The "Why" | Problem definitions, OKRs, core questions |
+| [`2_Environment/`](2_Environment/README.md) | 🌍 The "Context" | Roadmaps, constraints, setup guides |
+| [`3_Simulation/`](3_Simulation/README.md) | 🎨 The "Vision" | UI mockups, image carousel, flow diagrams |
+| [`4_Formula/`](4_Formula/README.md) | 🔬 The "Recipe" | Architecture, step-by-step guides, research |
+| [`5_Symbols/`](5_Symbols/README.md) | 💻 The "Reality" | Core source code and implementation |
+| [`6_Semblance/`](6_Semblance/README.md) | 🐛 The "Scars" | Error logs, workarounds, lessons learned |
+| [`7_Testing_Known/`](7_Testing_Known/README.md) | 🧪 The "Proof" | Validation checklists, outcome confirmation |
+
+### Root files
 
 ```
-streamlit/
-├── app.py                      Main Streamlit application
-├── utils.py                    Helper functions (returns, z-scores, rolling avg, …)
-├── requirements.txt            Python dependencies
-├── Dockerfile                  Container image definition (used by Fly.io)
-├── fly.toml.example            Reference Fly.io configuration (copy of what make create generates)
-├── Makefile                    Management commands
-├── copilot.md                  GitHub Copilot context, OKRs, and coding conventions
-├── real.md                     Real-world OKRs for the Fly.io create/destroy lifecycle
-├── formula_architecture.md     Architecture diagrams (Mermaid) + file-purpose explanations
-└── scripts/
-    ├── check-prereqs.sh        Prerequisite checker (flyctl, Docker, auth)
-    ├── fly-setup.sh            Interactive creation/deployment wizard
-    └── fly-destroy.sh          Environment teardown with confirmation
+index.html               GitHub Pages entry point (nav, carousel, stage cards, live app iframe)
+markdown_renderer.html   In-browser markdown reader (bi-directional linking for all .md files)
+nav.json                 Shared navigation data (debug menu, content menu, social links)
+aigent.md                Universal AI agent instructions
+copilot.md               GitHub Copilot context
+gemini.md                Google Gemini context
+kilocode.md              Kilo Code context
+claude.md                Anthropic Claude context
+robots.txt               SEO — search engine crawl rules
+sitemap.xml              SEO — page index for GitHub Pages
+.env.example             Environment variable template (copy to .env)
+Makefile                 Developer commands (create / deploy / destroy / …)
+fly.toml.example         Reference Fly.io configuration
 ```
 
-See [`formula_architecture.md`](formula_architecture.md) for detailed Mermaid
-diagrams of the component relationships, request flow, and infrastructure
-lifecycle.
+See [`4_Formula/formula_architecture.md`](4_Formula/formula_architecture.md) for detailed Mermaid
+diagrams of the component relationships, request flow, and infrastructure lifecycle.

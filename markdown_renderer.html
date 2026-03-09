@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown Viewer</title>
+  <!-- marked.js for markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e1117;
+      --surface: #1a1d27;
+      --border: #2d3147;
+      --accent: #ff4b4b;
+      --text: #fafafa;
+      --muted: #a3a8c3;
+      --debug-bg: #12141f;
+      --code-bg: #161b22;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Debug Nav */
+    #debug-nav {
+      display: none;
+      background: var(--debug-bg);
+      border-bottom: 2px solid var(--accent);
+      padding: 6px 16px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    #debug-nav.visible { display: block; }
+    #debug-nav a {
+      display: inline-block;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-right: 4px;
+      border: 1px solid var(--accent);
+      transition: background 0.2s;
+    }
+    #debug-nav a:hover { background: var(--accent); color: #fff; }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.82rem;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .back-btn:hover { color: var(--text); border-color: var(--muted); }
+    #file-title { font-size: 0.9rem; color: var(--muted); }
+    #debug-toggle-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #debug-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #debug-toggle-btn.active { border-color: var(--accent); color: var(--accent); }
+
+    /* Content Nav */
+    #content-nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    #content-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.82rem;
+      padding: 8px 10px;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    #content-nav a:hover { color: var(--text); border-bottom-color: var(--accent); }
+
+    /* Search */
+    .search-wrapper { margin-left: auto; position: relative; display: flex; align-items: center; }
+    #search-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 5px 10px;
+      border-radius: 20px;
+      width: 180px;
+      outline: none;
+      transition: border-color 0.2s, width 0.3s;
+    }
+    #search-input:focus { border-color: var(--accent); width: 240px; }
+    #search-input::placeholder { color: var(--muted); }
+    #search-suggestions {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      min-width: 240px;
+      z-index: 100;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    #search-suggestions.open { display: block; }
+    #search-suggestions a {
+      display: block;
+      color: var(--text);
+      text-decoration: none;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    #search-suggestions a:last-child { border-bottom: none; }
+    #search-suggestions a:hover { background: var(--bg); }
+
+    /* Markdown content */
+    #content-wrapper { flex: 1; padding: 32px 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+
+    #loading { color: var(--muted); font-size: 0.9rem; padding: 40px 0; text-align: center; }
+    #error-msg { color: var(--accent); font-size: 0.9rem; padding: 40px 0; text-align: center; }
+
+    #md-content h1 { font-size: 1.8rem; margin: 0 0 20px; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    #md-content h2 { font-size: 1.3rem; margin: 28px 0 12px; color: var(--text); }
+    #md-content h3 { font-size: 1.1rem; margin: 22px 0 10px; color: var(--text); }
+    #md-content p { line-height: 1.7; margin-bottom: 14px; color: var(--text); }
+    #md-content a { color: #58a6ff; text-decoration: none; }
+    #md-content a:hover { text-decoration: underline; }
+    #md-content ul, #md-content ol { padding-left: 24px; margin-bottom: 14px; }
+    #md-content li { line-height: 1.7; margin-bottom: 4px; }
+    #md-content code { background: var(--code-bg); color: #e6edf3; padding: 2px 6px; border-radius: 4px; font-size: 0.88em; font-family: "SFMono-Regular", Consolas, monospace; }
+    #md-content pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin-bottom: 16px; }
+    #md-content pre code { background: none; padding: 0; font-size: 0.85em; }
+    #md-content blockquote { border-left: 3px solid var(--accent); padding: 8px 16px; margin-bottom: 14px; color: var(--muted); background: var(--surface); border-radius: 0 4px 4px 0; }
+    #md-content table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 0.88rem; }
+    #md-content th, #md-content td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+    #md-content th { background: var(--surface); font-weight: 600; }
+    #md-content tr:nth-child(even) { background: var(--surface); }
+    #md-content img { max-width: 100%; border-radius: 6px; margin: 8px 0; }
+    #md-content hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+    /* Footer */
+    footer { background: var(--surface); border-top: 1px solid var(--border); padding: 12px 20px; text-align: center; font-size: 0.75rem; color: var(--muted); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      #content-wrapper { padding: 20px 14px; }
+      #search-input { width: 120px; }
+      #search-input:focus { width: 160px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav id="debug-nav" role="navigation" aria-label="Debug navigation"></nav>
+
+  <header>
+    <div class="header-left">
+      <a href="index.html" class="back-btn">← Home</a>
+      <span id="file-title">Markdown Viewer</span>
+    </div>
+    <button id="debug-toggle-btn" title="Toggle debug navigation">🐞 Debug</button>
+  </header>
+
+  <nav id="content-nav" role="navigation" aria-label="Content navigation">
+    <div class="search-wrapper">
+      <input id="search-input" type="search" placeholder="🔍 Search pages…" autocomplete="off" aria-label="Search pages" />
+      <div id="search-suggestions" role="listbox"></div>
+    </div>
+  </nav>
+
+  <div id="content-wrapper">
+    <div id="loading">⏳ Loading…</div>
+    <div id="error-msg" style="display:none"></div>
+    <div id="md-content"></div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="https://github.com/rifaterdemsahin/streamlit" target="_blank" rel="noopener">rifaterdemsahin/streamlit</a>
+      &nbsp;·&nbsp;
+      <a href="https://www.linkedin.com/in/rifaterdemsahin/" target="_blank" rel="noopener">LinkedIn</a>
+      &nbsp;·&nbsp;
+      <a href="https://www.youtube.com/@RifatErdemSahin" target="_blank" rel="noopener">YouTube @RifatErdemSahin</a>
+    </p>
+  </footer>
+
+  <script>
+    function getCookie(name) {
+      var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+    function setCookie(name, value, days) {
+      var exp = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + exp + '; path=/; SameSite=Lax';
+    }
+
+    var searchIndex = [];
+    var debugNav = document.getElementById('debug-nav');
+    var debugBtn = document.getElementById('debug-toggle-btn');
+    var searchInput = document.getElementById('search-input');
+    var suggestionsEl = document.getElementById('search-suggestions');
+
+    // Load nav
+    fetch('nav.json')
+      .then(function(r) { return r.json(); })
+      .then(function(nav) {
+        nav.debug_menu.forEach(function(item) {
+          var a = document.createElement('a');
+          a.href = 'markdown_renderer.html?file=' + encodeURIComponent(item.path);
+          a.textContent = item.emoji + ' ' + item.label;
+          debugNav.appendChild(a);
+          searchIndex.push({ label: item.label, emoji: item.emoji, href: a.href });
+        });
+        var contentNav = document.getElementById('content-nav');
+        var sw = contentNav.querySelector('.search-wrapper');
+        nav.content_menu.forEach(function(item) {
+          var a = document.createElement('a');
+          a.href = item.href;
+          a.textContent = item.emoji + ' ' + item.label;
+          contentNav.insertBefore(a, sw);
+          searchIndex.push({ label: item.label, emoji: item.emoji, href: item.href });
+        });
+      })
+      .catch(function() {})
+      .finally(function() { applyDebugState(); });
+
+    function applyDebugState() {
+      var params = new URLSearchParams(window.location.search);
+      var isDebug = getCookie('debug') === 'true' || params.get('debug') === 'true';
+      if (isDebug) { debugNav.classList.add('visible'); debugBtn.classList.add('active'); debugBtn.textContent = '🐞 Debug ✓'; }
+      else { debugNav.classList.remove('visible'); debugBtn.classList.remove('active'); debugBtn.textContent = '🐞 Debug'; }
+    }
+
+    debugBtn.addEventListener('click', function() {
+      var c = getCookie('debug') === 'true';
+      setCookie('debug', String(!c), 365);
+      applyDebugState();
+    });
+
+    // Search
+    searchInput.addEventListener('input', function() {
+      var q = searchInput.value.trim().toLowerCase();
+      suggestionsEl.innerHTML = '';
+      if (!q) { suggestionsEl.classList.remove('open'); return; }
+      var matches = searchIndex.filter(function(i) { return i.label.toLowerCase().includes(q); });
+      if (!matches.length) { suggestionsEl.classList.remove('open'); return; }
+      matches.slice(0, 8).forEach(function(item) {
+        var a = document.createElement('a');
+        a.href = item.href;
+        a.textContent = item.emoji + ' ' + item.label;
+        suggestionsEl.appendChild(a);
+      });
+      suggestionsEl.classList.add('open');
+    });
+    document.addEventListener('click', function(e) { if (!e.target.closest('.search-wrapper')) suggestionsEl.classList.remove('open'); });
+    searchInput.addEventListener('keydown', function(e) { if (e.key === 'Escape') { suggestionsEl.classList.remove('open'); searchInput.blur(); } });
+
+    // Load and render markdown file
+    var params = new URLSearchParams(window.location.search);
+    var file = params.get('file');
+
+    var loading = document.getElementById('loading');
+    var errorEl = document.getElementById('error-msg');
+    var mdContent = document.getElementById('md-content');
+
+    if (!file) {
+      loading.style.display = 'none';
+      errorEl.style.display = 'block';
+      errorEl.textContent = '⚠️ No file specified. Use ?file=path/to/file.md';
+    } else {
+      var safeFile = file.replace(/\.\./g, '');
+      document.getElementById('file-title').textContent = safeFile;
+      document.title = safeFile + ' — Markdown Viewer';
+
+      fetch(safeFile)
+        .then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.text();
+        })
+        .then(function(text) {
+          loading.style.display = 'none';
+          mdContent.innerHTML = marked.parse(text);
+          // Make internal .md links go through renderer
+          mdContent.querySelectorAll('a[href]').forEach(function(a) {
+            var href = a.getAttribute('href');
+            if (href && href.endsWith('.md') && !href.startsWith('http')) {
+              var base = safeFile.split('/').slice(0, -1).join('/');
+              var resolved = base ? base + '/' + href : href;
+              a.href = 'markdown_renderer.html?file=' + encodeURIComponent(resolved);
+            }
+          });
+        })
+        .catch(function(err) {
+          loading.style.display = 'none';
+          errorEl.style.display = 'block';
+          errorEl.textContent = '❌ Could not load "' + safeFile + '": ' + err.message;
+        });
+    }
+  </script>
+</body>
+</html>
