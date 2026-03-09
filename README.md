@@ -1,5 +1,7 @@
 # Streamlit — Quantitative Analysis PoC
 
+🌐 **Live app (GitHub Pages):** <https://rifaterdemsahin.github.io/streamlit/>
+
 A proof-of-concept Streamlit application using pandas, Plotly, and yfinance for
 quantitative financial analysis. Deployable to [Fly.io](https://fly.io) with a
 single interactive setup command.
