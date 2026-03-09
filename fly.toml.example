@@ -1,0 +1,35 @@
+# fly.toml.example – reference configuration for Fly.io deployment.
+#
+# DO NOT deploy this file directly.
+# Run  make create  to generate a personalised fly.toml with your app name.
+#
+# See: https://fly.io/docs/reference/configuration/
+
+app            = "YOUR-APP-NAME"   # must be globally unique on fly.io
+primary_region = "iad"             # closest Fly.io region to your users
+
+[build]
+  # Fly.io builds from the Dockerfile in the repo root.
+
+[env]
+  PORT = "8501"
+
+[http_service]
+  internal_port        = 8501
+  force_https          = true
+  auto_stop_machines   = true   # stop VMs when idle (saves cost)
+  auto_start_machines  = true   # wake up automatically on incoming requests
+  min_machines_running = 0
+  processes            = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval     = "15s"
+    method       = "GET"
+    path         = "/_stcore/health"
+    timeout      = "10s"
+
+[[vm]]
+  memory   = "512mb"   # 256 / 512 / 1024
+  cpu_kind = "shared"
+  cpus     = 1
