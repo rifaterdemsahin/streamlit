@@ -31,6 +31,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Inject Fly.io app URL into index.html
+        env:
+          FLY_APP_URL: ${{ secrets.FLY_APP_URL }}
+        run: |
+          if [[ ! "$FLY_APP_URL" =~ ^https:// ]]; then
+            echo "Error: FLY_APP_URL must start with https://" >&2
+            exit 1
+          fi
+          sed -i "s|__FLY_APP_URL__|${FLY_APP_URL}|g" index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
