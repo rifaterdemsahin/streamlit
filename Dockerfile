@@ -1,35 +1,55 @@
 # syntax=docker/dockerfile:1
-# Streamlit Quantitative Analysis PoC — production container image
 
-FROM python:3.11-slim
+# --- Stage 1: Builder ---
+FROM python:3.11-slim AS builder
 
-# Create a non-root user/group for security
-RUN groupadd --system appgroup \
- && useradd  --system --gid appgroup --no-create-home appuser
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install Python dependencies in a separate layer (better cache reuse on redeploy)
+# Install build dependencies if your requirements need to compile C-extensions
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source
-COPY app.py utils.py ./
+# --- Stage 2: Final Production Image ---
+FROM python:3.11-slim
 
-# Transfer ownership to the non-root user
-RUN chown -R appuser:appgroup /app
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    STREAMLIT_SERVER_PORT=8501 \
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
+# Create a non-root user
+RUN groupadd --system appgroup && \
+    useradd --system --gid appgroup --no-create-home appuser
+
+WORKDIR /app
+
+# Copy the virtual environment from the builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Copy application source and set ownership immediately
+COPY --chown=appuser:appgroup app.py utils.py ./
+
+# Use the non-root user
 USER appuser
 
 EXPOSE 8501
 
-# Lightweight health check that uses the stdlib (no extra packages needed)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD python -c \
-        "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"
+# Healthcheck using python stdlib
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"
 
-ENTRYPOINT ["streamlit", "run", "app.py", \
-            "--server.port=8501", \
-            "--server.address=0.0.0.0", \
-            "--server.headless=true", \
-            "--browser.gatherUsageStats=false"]
+ENTRYPOINT ["streamlit", "run", "app.py"]
